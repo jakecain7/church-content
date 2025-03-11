@@ -5,10 +5,10 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["express"]
+  external_node_modules = ["express","node-fetch"]
 
 [[redirects]]
-  from = "/.netlify/functions/*"
+  from = "/api/ideogram/*"
   to = "/.netlify/functions/:splat"
   status = 200
   force = true
