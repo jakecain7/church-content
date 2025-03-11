@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Netlify Functions Test</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    pre {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <h1>Netlify Functions Test</h1>
+  
+  <div>
+    <h2>Hello Function</h2>
+    <button onclick="testFunction()">Test Hello Function</button>
+    <div id="status" class="status"></div>
+    <pre id="response"></pre>
+  </div>
+
+  <script>
+    async function testFunction() {
+      const statusEl = document.getElementById('status');
+      const responseEl = document.getElementById('response');
+      
+      try {
+        statusEl.textContent = 'Testing...';
+        statusEl.className = 'status';
+        
+        const response = await fetch('/.netlify/functions/hello');
+        const data = await response.json();
+        
+        statusEl.textContent = 'Success!';
+        statusEl.className = 'status success';
+        responseEl.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        statusEl.textContent = 'Error: ' + error.message;
+        statusEl.className = 'status error';
+        responseEl.textContent = error.stack || error.message;
+      }
+    }
+  </script>
+</body>
+</html>

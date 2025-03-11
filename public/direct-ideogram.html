@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Direct Ideogram API Test</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    textarea { width: 100%; height: 100px; margin-bottom: 10px; }
+    button { padding: 10px 20px; background: #0066ff; color: white; border: none; cursor: pointer; }
+    .images { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .images img { max-width: 100%; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    .loading { margin: 20px 0; }
+    pre { background: #f5f5f5; padding: 10px; border: 1px solid #ddd; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Direct Ideogram API Test</h1>
+  <p>This page uses a proxy service to bypass CORS restrictions.</p>
+  
+  <div>
+    <label for="apiKey">Ideogram API Key:</label>
+    <input type="text" id="apiKey" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+  </div>
+  
+  <div>
+    <label for="prompt">Prompt:</label>
+    <textarea id="prompt" placeholder="Describe the image you want to create..."></textarea>
+  </div>
+  
+  <div>
+    <label for="aspectRatio">Aspect Ratio:</label>
+    <select id="aspectRatio" style="padding: 8px; margin-bottom: 10px;">
+      <option value="ASPECT_1_1">Square (1:1)</option>
+      <option value="ASPECT_16_9">Landscape (16:9)</option>
+      <option value="ASPECT_9_16">Portrait (9:16)</option>
+      <option value="ASPECT_16_10">Widescreen (16:10)</option>
+      <option value="ASPECT_10_16">Vertical (10:16)</option>
+    </select>
+  </div>
+  
+  <button id="generateBtn">Generate Images</button>
+  
+  <div id="loading" class="loading" style="display: none;">Generating images...</div>
+  <div id="error" style="color: red;"></div>
+  <div id="debug">
+    <h3>Debug Info:</h3>
+    <pre id="debugOutput"></pre>
+  </div>
+  <div id="images" class="images"></div>
+  
+  <script>
+    const debugEl = document.getElementById("debugOutput");
+    
+    function logDebug(message, data) {
+      let text = typeof message === "string" ? message : JSON.stringify(message, null, 2);
+      if (data) {
+        text += "\n" + JSON.stringify(data, null, 2);
+      }
+      debugEl.textContent += text + "\n\n";
+      console.log(message, data);
+    }
+    
+    document.getElementById("generateBtn").addEventListener("click", async () => {
+      const apiKey = document.getElementById("apiKey").value;
+      const prompt = document.getElementById("prompt").value;
+      const aspectRatio = document.getElementById("aspectRatio").value;
+      const loadingEl = document.getElementById("loading");
+      const errorEl = document.getElementById("error");
+      const imagesEl = document.getElementById("images");
+      
+      if (!apiKey) {
+        errorEl.textContent = "Please enter your API key";
+        return;
+      }
+      
+      if (!prompt) {
+        errorEl.textContent = "Please enter a prompt";
+        return;
+      }
+      
+      debugEl.textContent = ""; // Clear previous debug
+      errorEl.textContent = "";
+      loadingEl.style.display = "block";
+      imagesEl.innerHTML = "";
+      
+      try {
+        // Try a different CORS proxy
+        const proxyUrl = "https://api.allorigins.win/raw?url=";
+        const targetUrl = encodeURIComponent("https://api.ideogram.ai/generate");
+        
+        const requestBody = {
+          image_request: {
+            prompt: prompt,
+            aspect_ratio: aspectRatio,
+            model: "V_2A_TURBO",
+            magic_prompt_option: "ON",
+            num_images: 4
+          }
+        };
+        
+        logDebug("Request body:", requestBody);
+        
+        const response = await fetch(proxyUrl + targetUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Api-Key": apiKey
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        logDebug("Response status:", response.status);
+        
+        const responseText = await response.text();
+        
+        try {
+          const data = JSON.parse(responseText);
+          logDebug("Response data:", data);
+          
+          if (data.error) {
+            throw new Error(data.error);
+          }
+          
+          if (data.data && data.data.length > 0) {
+            data.data.forEach(image => {
+              const img = document.createElement("img");
+              img.src = image.url;
+              img.alt = prompt;
+              imagesEl.appendChild(img);
+            });
+          } else {
+            errorEl.textContent = "No images were generated";
+          }
+        } catch (parseError) {
+          logDebug("Failed to parse JSON. Raw response:", responseText);
+          throw new Error("Failed to parse API response");
+        }
+      } catch (error) {
+        errorEl.textContent = error.message || "An error occurred";
+        logDebug("Error details:", {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+      } finally {
+        loadingEl.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
