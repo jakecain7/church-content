@@ -85,20 +85,19 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
 
     try {
       // Make request to Ideogram API through CORS proxy
-      const response = await fetchWithCorsProxy('https://api.ideogram.ai/generate', {
-        method: 'POST',
+      const response = await fetch('/api/ideogram', {
+          method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Api-Key': apiKey
         },
         body: JSON.stringify({
-          image_request: {
             prompt,
             aspect_ratio: aspectRatio,
             model: "V_2A_TURBO",
             magic_prompt_option: "ON",
             num_images: 4
-          }
+          
         })
       });
 
@@ -109,11 +108,11 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
 
       const data = await response.json();
       
-      if (!data.data || !Array.isArray(data.data)) {
+      if (!data.images || !Array.isArray(data.images)) {
         throw new Error('Invalid response format from API');
       }
 
-      const images = data.data.map(img => img.url);
+      const images = data.images.map((img: { url: string }) => img.url);
       
       if (images.length === 0) {
         throw new Error('No images were generated');
