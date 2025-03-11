@@ -72,8 +72,8 @@
           throw new Error(data.error);
         }
         
-        if (data.data && data.data.length > 0) {
-          data.data.forEach(image => {
+        if (data.images && data.images.length > 0) {
+          data.images.forEach(image => {
             const img = document.createElement('img');
             img.src = image.url;
             img.alt = prompt;
