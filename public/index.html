@@ -72,7 +72,7 @@
           throw new Error(data.error);
         }
         
-        if (data.images && data.images.length > 0) {
+         if (data.images && data.images.length > 0) {
           data.images.forEach(image => {
             const img = document.createElement('img');
             img.src = image.url;

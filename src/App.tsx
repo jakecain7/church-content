@@ -6,11 +6,30 @@ import { ImageCreator } from './modules/image-creator/ImageCreator';
 import { cn } from './lib/utils';
 import { Toaster } from 'react-hot-toast';
 import { createClient } from '@supabase/supabase-js';
+import toast from 'react-hot-toast';
 
-// Initialize Supabase client
+// Initialize Supabase client with error handling
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+
+let supabase;
+try {
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase configuration is missing. Please check your environment variables.');
+  }
+  supabase = createClient(supabaseUrl, supabaseKey);
+} catch (error) {
+  console.error('Failed to initialize Supabase client:', error);
+  // Initialize with a mock client to prevent app crashes
+  supabase = {
+    from: () => ({
+      select: () => Promise.resolve({ data: [], error: null }),
+      insert: () => Promise.resolve({ data: null, error: null }),
+      update: () => Promise.resolve({ data: null, error: null }),
+      delete: () => Promise.resolve({ data: null, error: null }),
+    }),
+  };
+}
 
 export type Module = 'study-guides' | 'writing-assistant' | 'create-images';
 
@@ -28,12 +47,17 @@ export default function App() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<HistoryItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dbError, setDbError] = useState<string | null>(null);
 
   useEffect(() => {
     // Load history from Supabase
     const fetchHistory = async () => {
       setLoading(true);
       try {
+        if (!supabaseUrl || !supabaseKey) {
+          throw new Error('Supabase configuration is missing');
+        }
+
         const { data, error } = await supabase
           .from('history')
           .select('*')
@@ -42,8 +66,12 @@ export default function App() {
         if (error) throw error;
         
         setHistory(data || []);
+        setDbError(null);
       } catch (error) {
         console.error('Error fetching history:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch history';
+        setDbError(errorMessage);
+        toast.error(`Database error: ${errorMessage}`);
         // Initialize with empty history if we can't fetch
         setHistory([]);
       } finally {
@@ -55,6 +83,17 @@ export default function App() {
   }, []);
 
   const addToHistory = async (item: Omit<HistoryItem, 'id' | 'createdAt'>) => {
+    if (dbError) {
+      // If database is not available, only update local state
+      const newItem = {
+        ...item,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+      };
+      setHistory(prev => [newItem, ...prev]);
+      return newItem.id;
+    }
+
     const newItem = {
       ...item,
       id: crypto.randomUUID(),
@@ -81,6 +120,8 @@ export default function App() {
       return newItem.id;
     } catch (error) {
       console.error('Error adding to history:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save to database';
+      toast.error(`Failed to save: ${errorMessage}`);
       // Still update local state even if Supabase fails
       setHistory(prev => [newItem, ...prev]);
       return newItem.id;
@@ -89,16 +130,18 @@ export default function App() {
 
   const updateHistoryItem = async (id: string, updates: Partial<Omit<HistoryItem, 'id' | 'createdAt'>>) => {
     try {
-      // Update in Supabase
-      const { error } = await supabase
-        .from('history')
-        .update({
-          title: updates.title,
-          content: updates.content
-        })
-        .eq('id', id);
-      
-      if (error) throw error;
+      if (!dbError) {
+        // Update in Supabase
+        const { error } = await supabase
+          .from('history')
+          .update({
+            title: updates.title,
+            content: updates.content
+          })
+          .eq('id', id);
+        
+        if (error) throw error;
+      }
       
       // Update local state
       setHistory(prev => 
@@ -108,6 +151,8 @@ export default function App() {
       );
     } catch (error) {
       console.error('Error updating history item:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update';
+      toast.error(`Failed to update: ${errorMessage}`);
       // Still update local state even if Supabase fails
       setHistory(prev => 
         prev.map(item => 
@@ -119,13 +164,15 @@ export default function App() {
 
   const deleteHistoryItem = async (id: string) => {
     try {
-      // Delete from Supabase
-      const { error } = await supabase
-        .from('history')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
+      if (!dbError) {
+        // Delete from Supabase
+        const { error } = await supabase
+          .from('history')
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+      }
       
       // Update local state
       setHistory(prev => prev.filter(item => item.id !== id));
@@ -134,6 +181,8 @@ export default function App() {
       }
     } catch (error) {
       console.error('Error deleting history item:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete';
+      toast.error(`Failed to delete: ${errorMessage}`);
       // Still update local state even if Supabase fails
       setHistory(prev => prev.filter(item => item.id !== id));
       if (selectedHistoryItem?.id === id) {
@@ -299,6 +348,12 @@ export default function App() {
             {loading ? (
               <div className="flex justify-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+              </div>
+            ) : dbError ? (
+              <div className="text-center py-4">
+                <p className="text-sm text-red-600 mb-2">Database Error:</p>
+                <p className="text-sm text-gray-500">{dbError}</p>
+                <p className="text-xs text-gray-400 mt-2">Working in offline mode</p>
               </div>
             ) : filteredHistory.length > 0 ? (
               <ul className="space-y-2">

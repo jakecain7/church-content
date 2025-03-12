@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Download, RefreshCw, Image as ImageIcon, Copy, Grid2X2, AlertTriangle } from 'lucide-react';
+import {
+  Loader2,
+  Download,
+  RefreshCw,
+  Image as ImageIcon,
+  Copy,
+  Grid2X2,
+  AlertTriangle,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '../../lib/utils';
 import { fetchWithCorsProxy } from '../../lib/cors-proxy';
@@ -11,15 +19,27 @@ interface ImageCreatorProps {
     aspectRatio?: string;
     allImages?: string[];
   };
-  onSave?: (data: { prompt: string; imageUrl?: string; aspectRatio?: string; allImages?: string[] }, title?: string) => void;
+  onSave?: (
+    data: {
+      prompt: string;
+      imageUrl?: string;
+      aspectRatio?: string;
+      allImages?: string[];
+    },
+    title?: string
+  ) => void;
 }
 
 export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
   const [prompt, setPrompt] = useState(initialData?.prompt || '');
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || '');
-  const [allImages, setAllImages] = useState<string[]>(initialData?.allImages || []);
+  const [allImages, setAllImages] = useState<string[]>(
+    initialData?.allImages || []
+  );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [aspectRatio, setAspectRatio] = useState<string>(initialData?.aspectRatio || 'ASPECT_1_1');
+  const [aspectRatio, setAspectRatio] = useState<string>(
+    initialData?.aspectRatio || 'ASPECT_1_1'
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +48,9 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
     // Check if API key is available
     const ideogramKey = import.meta.env.VITE_IDEOGRAM_API_KEY;
     if (!ideogramKey) {
-      setError('Ideogram API key is not configured. Please check your environment variables.');
+      setError(
+        'Ideogram API key is not configured. Please check your environment variables.'
+      );
       console.warn('Ideogram API key is not configured');
     }
   }, []);
@@ -39,15 +61,40 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
     "Generate a minimalist sermon title slide for 'Overcoming Fear with Faith' using soft blues and a calm, hopeful aesthetic.",
     "Create an Instagram post for our Easter service featuring a glowing cross at sunrise with the text 'He is Risen!'",
     "Design a thank-you slide for volunteers with an image of raised hands and the text 'We Appreciate You!' in a celebratory style.",
-    "Create a Thanksgiving gratitude-themed image with autumn leaves, a harvest table, and the verse 'Give thanks to the Lord' (Psalm 107:1)."
+    "Create a Thanksgiving gratitude-themed image with autumn leaves, a harvest table, and the verse 'Give thanks to the Lord' (Psalm 107:1).",
   ];
 
   const aspectRatioOptions = [
-    { value: 'ASPECT_1_1', label: 'Square (1:1)', description: 'Perfect for social media posts', preview: 'w-16 h-16' },
-    { value: 'ASPECT_16_9', label: 'Landscape (16:9)', description: 'Ideal for presentation slides', preview: 'w-16 h-9' },
-    { value: 'ASPECT_9_16', label: 'Portrait (9:16)', description: 'Great for Instagram stories', preview: 'w-9 h-16' },
-    { value: 'ASPECT_16_10', label: 'Widescreen (16:10)', description: 'Good for desktop wallpapers', preview: 'w-16 h-10' },
-    { value: 'ASPECT_10_16', label: 'Vertical (10:16)', description: 'Perfect for Pinterest', preview: 'w-10 h-16' }
+    {
+      value: 'ASPECT_1_1',
+      label: 'Square (1:1)',
+      description: 'Perfect for social media posts',
+      preview: 'w-16 h-16',
+    },
+    {
+      value: 'ASPECT_16_9',
+      label: 'Landscape (16:9)',
+      description: 'Ideal for presentation slides',
+      preview: 'w-16 h-9',
+    },
+    {
+      value: 'ASPECT_9_16',
+      label: 'Portrait (9:16)',
+      description: 'Great for Instagram stories',
+      preview: 'w-9 h-16',
+    },
+    {
+      value: 'ASPECT_16_10',
+      label: 'Widescreen (16:10)',
+      description: 'Good for desktop wallpapers',
+      preview: 'w-16 h-10',
+    },
+    {
+      value: 'ASPECT_10_16',
+      label: 'Vertical (10:16)',
+      description: 'Perfect for Pinterest',
+      preview: 'w-10 h-16',
+    },
   ];
 
   const handleExampleClick = (example: string) => {
@@ -86,34 +133,37 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
     try {
       // Make request to Ideogram API through CORS proxy
       const response = await fetch('/api/ideogram', {
-          method: 'POST',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Api-Key': apiKey
+          'Api-Key': apiKey,
         },
         body: JSON.stringify({
-            prompt,
-            aspect_ratio: aspectRatio,
-            model: "V_2A_TURBO",
-            magic_prompt_option: "ON",
-            num_images: 4
-          
-        })
+          prompt,
+          aspect_ratio: aspectRatio,
+          model: 'V_2A_TURBO',
+          magic_prompt_option: 'ON',
+          num_images: 4,
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || errorData.message || `API error: ${response.status}`);
+        throw new Error(
+          errorData.error ||
+            errorData.message ||
+            `API error: ${response.status}`
+        );
       }
 
       const data = await response.json();
-      
+
       if (!data.images || !Array.isArray(data.images)) {
         throw new Error('Invalid response format from API');
       }
 
       const images = data.images.map((img: { url: string }) => img.url);
-      
+
       if (images.length === 0) {
         throw new Error('No images were generated');
       }
@@ -121,22 +171,28 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
       setAllImages(images);
       setImageUrl(images[0]);
       setSelectedImageIndex(0);
-      
+
       if (onSave) {
-        onSave({ 
-          prompt, 
-          imageUrl: images[0],
-          aspectRatio,
-          allImages: images
-        }, `Image: ${prompt.slice(0, 30)}${prompt.length > 30 ? '...' : ''}`);
+        onSave(
+          {
+            prompt,
+            imageUrl: images[0],
+            aspectRatio,
+            allImages: images,
+          },
+          `Image: ${prompt.slice(0, 30)}${prompt.length > 30 ? '...' : ''}`
+        );
       }
-      
+
       toast.success('Images generated successfully!', { id: toastId });
     } catch (error) {
       console.error('Image generation error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : 'An unexpected error occurred';
       setError(errorMessage);
-      toast.error(`Failed to generate images: ${errorMessage}`, { id: toastId });
+      toast.error(`Failed to generate images: ${errorMessage}`, {
+        id: toastId,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +203,7 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
       const response = await fetch(url);
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = `church-image-${Date.now()}.jpg`;
@@ -155,7 +211,7 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(blobUrl);
-      
+
       toast.success('Image downloaded successfully');
     } catch (error) {
       console.error('Download error:', error);
@@ -173,14 +229,17 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-3">Create Church Images</h1>
-        
+        <h1 className="text-2xl font-bold text-gray-900 mb-3">
+          Create Church Images
+        </h1>
+
         <p className="text-gray-600 mb-6 text-lg">
-          Need eye-catching visuals? Create sermon series graphics, event graphics, coloring pages for kids ministry, 
-          and social media visuals that reflect your message beautifully. Just describe what you need, and we'll generate 
-          stunning church-friendly designs!
+          Need eye-catching visuals? Create sermon series graphics, event
+          graphics, coloring pages for kids ministry, and social media visuals
+          that reflect your message beautifully. Just describe what you need,
+          and we'll generate stunning church-friendly designs!
         </p>
-        
+
         {error && (
           <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-md">
             <div className="flex items-start">
@@ -192,10 +251,12 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
             </div>
           </div>
         )}
-        
+
         {allImages.length === 0 && !error && (
           <div className="mb-6">
-            <h2 className="text-lg font-medium text-gray-700 mb-3">Try one of these examples:</h2>
+            <h2 className="text-lg font-medium text-gray-700 mb-3">
+              Try one of these examples:
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {examples.map((example, index) => (
                 <button
@@ -209,7 +270,7 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
             </div>
           </div>
         )}
-        
+
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -233,7 +294,7 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
               )}
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Choose an aspect ratio
@@ -244,25 +305,31 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
                   key={option.value}
                   onClick={() => setAspectRatio(option.value)}
                   className={cn(
-                    "flex flex-col items-center p-3 rounded-lg border transition-all",
+                    'flex flex-col items-center p-3 rounded-lg border transition-all',
                     aspectRatio === option.value
-                      ? "border-blue-500 bg-blue-50 ring-2 ring-blue-300"
-                      : "border-gray-200 hover:border-blue-300 hover:bg-blue-50"
+                      ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300'
+                      : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
                   )}
                 >
-                  <div className={cn(
-                    "bg-gray-200 mb-2 rounded flex items-center justify-center",
-                    option.preview
-                  )}>
+                  <div
+                    className={cn(
+                      'bg-gray-200 mb-2 rounded flex items-center justify-center',
+                      option.preview
+                    )}
+                  >
                     <ImageIcon className="w-6 h-6 text-gray-400" />
                   </div>
-                  <span className="font-medium text-sm text-gray-900">{option.label}</span>
-                  <span className="text-xs text-gray-500 text-center mt-1">{option.description}</span>
+                  <span className="font-medium text-sm text-gray-900">
+                    {option.label}
+                  </span>
+                  <span className="text-xs text-gray-500 text-center mt-1">
+                    {option.description}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
-          
+
           <div className="flex justify-end">
             <button
               onClick={generateImage}
@@ -284,11 +351,13 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
           </div>
         </div>
       </div>
-      
+
       {allImages.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Your Generated Images</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Your Generated Images
+            </h2>
             <div className="flex gap-2">
               <button
                 onClick={() => handleDownload(imageUrl)}
@@ -302,41 +371,43 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
                 disabled={isLoading}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`}
+                />
                 <span>Regenerate</span>
               </button>
             </div>
           </div>
-          
+
           <div className="flex justify-center bg-gray-100 p-4 rounded-lg mb-4">
-            <img 
-              src={imageUrl} 
+            <img
+              src={imageUrl}
               alt={prompt}
               className="max-w-full rounded-lg shadow-md max-h-[600px] object-contain"
             />
           </div>
-          
+
           <div className="grid grid-cols-4 gap-2 mb-4">
             {allImages.map((img, index) => (
               <button
                 key={index}
                 onClick={() => selectImage(index)}
                 className={cn(
-                  "p-1 rounded-lg border-2 transition-all",
+                  'p-1 rounded-lg border-2 transition-all',
                   selectedImageIndex === index
-                    ? "border-blue-500"
-                    : "border-transparent hover:border-blue-300"
+                    ? 'border-blue-500'
+                    : 'border-transparent hover:border-blue-300'
                 )}
               >
-                <img 
-                  src={img} 
+                <img
+                  src={img}
                   alt={`Option ${index + 1}`}
                   className="w-full h-24 object-cover rounded"
                 />
               </button>
             ))}
           </div>
-          
+
           <div className="mt-4 bg-gray-50 p-4 rounded-lg">
             <h3 className="font-medium text-gray-700 mb-2">Prompt used:</h3>
             <p className="text-gray-600 text-sm">{prompt}</p>
