@@ -42,17 +42,6 @@ export const handler = async (event) => {
     path: event.path
   });
 
-  // Log environment status
-  log('info', 'Environment check', {
-    requestId,
-    hasIdeogramKey: !!process.env.VITE_IDEOGRAM_API_KEY,
-    nodeEnv: process.env.NODE_ENV,
-    availableEnvVars: Object.keys(process.env)
-      .filter(key => !key.toLowerCase().includes('key') && 
-                    !key.toLowerCase().includes('secret') && 
-                    !key.toLowerCase().includes('token'))
-  });
-  
   // Handle preflight OPTIONS request
   if (event.httpMethod === "OPTIONS") {
     log('info', 'Handling OPTIONS request', { requestId });
@@ -129,7 +118,13 @@ export const handler = async (event) => {
       "ASPECT_16_9",
       "ASPECT_9_16",
       "ASPECT_16_10",
-      "ASPECT_10_16"
+      "ASPECT_10_16",
+      "ASPECT_3_2",
+      "ASPECT_2_3",
+      "ASPECT_4_3",
+      "ASPECT_3_4",
+      "ASPECT_1_3",
+      "ASPECT_3_1"
     ];
     
     const aspectRatio = body.aspect_ratio || "ASPECT_1_1";
@@ -155,7 +150,7 @@ export const handler = async (event) => {
         prompt: body.prompt,
         aspect_ratio: aspectRatio,
         model: "V_2A_TURBO",
-        magic_prompt_option: "ON",
+        magic_prompt_option: "OFF",
         num_images: body.num_images || 4
       }
     };

@@ -95,6 +95,42 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
       description: 'Perfect for Pinterest',
       preview: 'w-10 h-16',
     },
+    {
+      value: 'ASPECT_3_2',
+      label: 'Landscape (3:2)',
+      description: 'Classic photo ratio',
+      preview: 'w-15 h-10',
+    },
+    {
+      value: 'ASPECT_2_3',
+      label: 'Portrait (2:3)',
+      description: 'Vertical photo ratio',
+      preview: 'w-10 h-15',
+    },
+    {
+      value: 'ASPECT_4_3',
+      label: 'Standard (4:3)',
+      description: 'Traditional screen ratio',
+      preview: 'w-16 h-12',
+    },
+    {
+      value: 'ASPECT_3_4',
+      label: 'Portrait (3:4)',
+      description: 'Vertical screen ratio',
+      preview: 'w-12 h-16',
+    },
+    {
+      value: 'ASPECT_1_3',
+      label: 'Banner (1:3)',
+      description: 'Tall vertical banners',
+      preview: 'w-8 h-24',
+    },
+    {
+      value: 'ASPECT_3_1',
+      label: 'Banner (3:1)',
+      description: 'Wide horizontal banners',
+      preview: 'w-24 h-8',
+    },
   ];
 
   const handleExampleClick = (example: string) => {
@@ -299,7 +335,7 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Choose an aspect ratio
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {aspectRatioOptions.map((option) => (
                 <button
                   key={option.value}
