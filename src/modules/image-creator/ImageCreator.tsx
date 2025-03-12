@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '../../lib/utils';
-import { fetchWithCorsProxy } from '../../lib/cors-proxy';
 
 interface ImageCreatorProps {
   initialData?: {
@@ -30,19 +29,61 @@ interface ImageCreatorProps {
   ) => void;
 }
 
+interface ExampleImage {
+  prompt: string;
+  imageUrl: string;
+}
+
 export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
   const [prompt, setPrompt] = useState(initialData?.prompt || '');
   const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || '');
-  const [allImages, setAllImages] = useState<string[]>(
-    initialData?.allImages || []
-  );
+  const [allImages, setAllImages] = useState<string[]>(initialData?.allImages || []);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [aspectRatio, setAspectRatio] = useState<string>(
-    initialData?.aspectRatio || 'ASPECT_1_1'
-  );
+  const [aspectRatio, setAspectRatio] = useState<string>(initialData?.aspectRatio || 'ASPECT_1_1');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const exampleImages: ExampleImage[] = [
+    {
+      prompt: "Design a youth group event flyer with a fun, energetic vibe, featuring neon colors and bold text saying 'Join Us for Youth Night!'",
+      imageUrl: "/images/youth-night.jpg"
+    },
+    {
+      prompt: "Coloring book, bold line art. White and black minimalistic easy draw coloring page for small kids featuring Noah's Ark with cute animals.",
+      imageUrl: "/images/noahs-ark-coloring.jpg"
+    },
+    {
+      prompt: "Generate a minimalist sermon title slide for 'Overcoming Fear with Faith' using soft blues and a calm, hopeful aesthetic.",
+      imageUrl: "/images/overcoming-fear.jpg"
+    },
+    {
+      prompt: "Create an Instagram post for our Easter service featuring a glowing cross at sunrise with the text 'He is Risen!'",
+      imageUrl: "/images/he-is-risen.jpg"
+    },
+    {
+      prompt: "iPhone style photograph of an open Bible with soft, natural lighting, accompanied by a warm cup of coffee or tea.",
+      imageUrl: "/images/bible-coffee.jpg"
+    },
+    {
+      prompt: "Create a Thanksgiving gratitude-themed image with autumn leaves, a harvest table, and the verse 'Give thanks to the Lord' (Psalm 107:1).",
+      imageUrl: "/images/give-thanks.jpg"
+    }
+  ];
+
+  const aspectRatioOptions = [
+    { value: 'ASPECT_1_1', label: 'Square (1:1)', description: 'Perfect for social media posts', preview: 'w-16 h-16' },
+    { value: 'ASPECT_16_9', label: 'Landscape (16:9)', description: 'Ideal for presentation slides', preview: 'w-16 h-9' },
+    { value: 'ASPECT_9_16', label: 'Portrait (9:16)', description: 'Great for Instagram stories', preview: 'w-9 h-16' },
+    { value: 'ASPECT_16_10', label: 'Widescreen (16:10)', description: 'Good for desktop wallpapers', preview: 'w-16 h-10' },
+    { value: 'ASPECT_10_16', label: 'Vertical (10:16)', description: 'Perfect for Pinterest', preview: 'w-10 h-16' },
+    { value: 'ASPECT_3_2', label: 'Landscape (3:2)', description: 'Classic photo ratio', preview: 'w-15 h-10' },
+    { value: 'ASPECT_2_3', label: 'Portrait (2:3)', description: 'Vertical photo ratio', preview: 'w-10 h-15' },
+    { value: 'ASPECT_4_3', label: 'Standard (4:3)', description: 'Traditional screen ratio', preview: 'w-16 h-12' },
+    { value: 'ASPECT_3_4', label: 'Portrait (3:4)', description: 'Vertical screen ratio', preview: 'w-12 h-16' },
+    { value: 'ASPECT_1_3', label: 'Banner (1:3)', description: 'Tall vertical banners', preview: 'w-8 h-24' },
+    { value: 'ASPECT_3_1', label: 'Banner (3:1)', description: 'Wide horizontal banners', preview: 'w-24 h-8' }
+  ];
 
   useEffect(() => {
     // Check if API key is available
@@ -54,84 +95,6 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
       console.warn('Ideogram API key is not configured');
     }
   }, []);
-
-  const examples = [
-    "Design a youth group event flyer with a fun, energetic vibe, featuring neon colors and bold text saying 'Join Us for Youth Night!'",
-    "Create a black and white coloring page of Noah's Ark, with animals boarding the ark in pairs and a rainbow outline in the background.",
-    "Generate a minimalist sermon title slide for 'Overcoming Fear with Faith' using soft blues and a calm, hopeful aesthetic.",
-    "Create an Instagram post for our Easter service featuring a glowing cross at sunrise with the text 'He is Risen!'",
-    "Design a thank-you slide for volunteers with an image of raised hands and the text 'We Appreciate You!' in a celebratory style.",
-    "Create a Thanksgiving gratitude-themed image with autumn leaves, a harvest table, and the verse 'Give thanks to the Lord' (Psalm 107:1).",
-  ];
-
-  const aspectRatioOptions = [
-    {
-      value: 'ASPECT_1_1',
-      label: 'Square (1:1)',
-      description: 'Perfect for social media posts',
-      preview: 'w-16 h-16',
-    },
-    {
-      value: 'ASPECT_16_9',
-      label: 'Landscape (16:9)',
-      description: 'Ideal for presentation slides',
-      preview: 'w-16 h-9',
-    },
-    {
-      value: 'ASPECT_9_16',
-      label: 'Portrait (9:16)',
-      description: 'Great for Instagram stories',
-      preview: 'w-9 h-16',
-    },
-    {
-      value: 'ASPECT_16_10',
-      label: 'Widescreen (16:10)',
-      description: 'Good for desktop wallpapers',
-      preview: 'w-16 h-10',
-    },
-    {
-      value: 'ASPECT_10_16',
-      label: 'Vertical (10:16)',
-      description: 'Perfect for Pinterest',
-      preview: 'w-10 h-16',
-    },
-    {
-      value: 'ASPECT_3_2',
-      label: 'Landscape (3:2)',
-      description: 'Classic photo ratio',
-      preview: 'w-15 h-10',
-    },
-    {
-      value: 'ASPECT_2_3',
-      label: 'Portrait (2:3)',
-      description: 'Vertical photo ratio',
-      preview: 'w-10 h-15',
-    },
-    {
-      value: 'ASPECT_4_3',
-      label: 'Standard (4:3)',
-      description: 'Traditional screen ratio',
-      preview: 'w-16 h-12',
-    },
-    {
-      value: 'ASPECT_3_4',
-      label: 'Portrait (3:4)',
-      description: 'Vertical screen ratio',
-      preview: 'w-12 h-16',
-    },
-    {
-      value: 'ASPECT_1_3',
-      label: 'Banner (1:3)',
-      description: 'Tall vertical banners',
-      preview: 'w-8 h-24',
-    },
-    {
-      value: 'ASPECT_3_1',
-      label: 'Banner (3:1)',
-      description: 'Wide horizontal banners',
-      preview: 'w-24 h-8',
-    },
-  ];
 
   const handleExampleClick = (example: string) => {
     setPrompt(example);
@@ -291,17 +254,28 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
         {allImages.length === 0 && !error && (
           <div className="mb-6">
             <h2 className="text-lg font-medium text-gray-700 mb-3">
-              Try one of these examples:
+              Example Designs:
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {examples.map((example, index) => (
-                <button
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {exampleImages.map((example, index) => (
+                <div 
                   key={index}
-                  onClick={() => handleExampleClick(example)}
-                  className="text-left p-4 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 hover:border-blue-300 transition-colors shadow-sm"
+                  className="relative group cursor-pointer overflow-hidden rounded-lg shadow-md"
+                  onClick={() => handleExampleClick(example.prompt)}
                 >
-                  <span className="font-medium text-blue-800">{example}</span>
-                </button>
+                  <img 
+                    src={example.imageUrl}
+                    alt={example.prompt}
+                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <p className="text-white text-sm line-clamp-2">
+                        {example.prompt}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
