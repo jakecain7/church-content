@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ideogram API Proxy Integration</title>
+  <style>
+    body { 
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      max-width: 800px; 
+      margin: 0 auto; 
+      padding: 20px;
+      line-height: 1.5;
+      color: #333;
+    }
+    h1 { color: #2563eb; margin-bottom: 8px; }
+    p { margin-top: 0; margin-bottom: 20px; color: #666; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 6px; font-weight: 500; }
+    textarea, select { 
+      width: 100%; 
+      padding: 10px; 
+      border: 1px solid #ddd; 
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    textarea { height: 120px; resize: vertical; }
+    button { 
+      background: #2563eb; 
+      color: white; 
+      border: none; 
+      padding: 12px 24px; 
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer; 
+      transition: background-color 0.2s;
+    }
+    button:hover { background: #1d4ed8; }
+    button:disabled { background: #93c5fd; cursor: not-allowed; }
+    .images { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+      gap: 16px; 
+      margin-top: 24px; 
+    }
+    .image-container {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .image-container img { 
+      width: 100%; 
+      display: block;
+      border-radius: 8px;
+    }
+    .download-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .image-container:hover .download-btn {
+      opacity: 1;
+    }
+    .error { 
+      color: #dc2626; 
+      background: #fee2e2;
+      padding: 12px;
+      border-radius: 6px;
+      margin: 16px 0;
+      display: none;
+    }
+    .loading { 
+      display: none;
+      margin: 24px 0;
+      text-align: center;
+    }
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(37, 99, 235, 0.2);
+      border-radius: 50%;
+      border-top-color: #2563eb;
+      animation: spin 1s ease-in-out infinite;
+    }
+    .response-details {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 16px;
+      margin-top: 24px;
+      font-family: monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      display: none;
+    }
+    .toggle-details {
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-size: 14px;
+      padding: 0;
+      margin-top: 16px;
+      cursor: pointer;
+      display: none;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .examples {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .example-card {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 6px;
+      padding: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .example-card:hover {
+      background: #e0f2fe;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ideogram API Proxy Integration</h1>
+  <p>Generate images using the Ideogram API through our Netlify function proxy.</p>
+  
+  <h3>Example Prompts:</h3>
+  <div class="examples">
+    <div class="example-card" data-prompt="Design a youth group event flyer with a fun, energetic vibe, featuring neon colors and bold text saying 'Join Us for Youth Night!'">
+      Youth Group Event Flyer
+    </div>
+    <div class="example-card" data-prompt="Create a black and white coloring page of Noah's Ark, with animals boarding the ark in pairs and a rainbow outline in the background.">
+      Noah's Ark Coloring Page
+    </div>
+    <div class="example-card" data-prompt="Generate a minimalist sermon title slide for 'Overcoming Fear with Faith' using soft blues and a calm, hopeful aesthetic.">
+      Sermon Title Slide
+    </div>
+    <div class="example-card" data-prompt="Create an Instagram post for our Easter service featuring a glowing cross at sunrise with the text 'He is Risen!'">
+      Easter Service Post
+    </div>
+  </div>
+  
+  <div class="form-group">
+    <label for="prompt">Prompt:</label>
+    <textarea id="prompt" placeholder="Describe the image you want to create..."></textarea>
+  </div>
+  
+  <div class="form-group">
+    <label for="aspectRatio">Aspect Ratio:</label>
+    <select id="aspectRatio">
+      <option value="ASPECT_1_1">Square (1:1)</option>
+      <option value="ASPECT_16_9">Landscape (16:9)</option>
+      <option value="ASPECT_9_16">Portrait (9:16)</option>
+      <option value="ASPECT_16_10">Widescreen (16:10)</option>
+      <option value="ASPECT_10_16">Vertical (10:16)</option>
+    </select>
+  </div>
+  
+  <div class="form-group">
+    <label for="numImages">Number of Images:</label>
+    <select id="numImages">
+      <option value="1">1 image</option>
+      <option value="2">2 images</option>
+      <option value="3">3 images</option>
+      <option value="4" selected>4 images</option>
+    </select>
+  </div>
+  
+  <button id="generateBtn">Generate Images</button>
+  
+  <div id="error" class="error"></div>
+  
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Generating images... This may take up to 30 seconds.</p>
+  </div>
+  
+  <div id="images" class="images"></div>
+  
+  <button id="toggleDetails" class="toggle-details">Show Response Details</button>
+  <div id="responseDetails" class="response-details"></div>
+  
+  <script>
+    // Example prompts
+    document.querySelectorAll('.example-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.getElementById('prompt').value = card.dataset.prompt;
+      });
+    });
+    
+    // Toggle response details
+    const toggleDetailsBtn = document.getElementById('toggleDetails');
+    const responseDetailsEl = document.getElementById('responseDetails');
+    
+    toggleDetailsBtn.addEventListener('click', () => {
+      if (responseDetailsEl.style.display === 'none') {
+        responseDetailsEl.style.display = 'block';
+        toggleDetailsBtn.textContent = 'Hide Response Details';
+      } else {
+        responseDetailsEl.style.display = 'none';
+        toggleDetailsBtn.textContent = 'Show Response Details';
+      }
+    });
+    
+    // Generate images
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      const prompt = document.getElementById('prompt').value;
+      const aspectRatio = document.getElementById('aspectRatio').value;
+      const numImages = parseInt(document.getElementById('numImages').value);
+      const errorEl = document.getElementById('error');
+      const loadingEl = document.getElementById('loading');
+      const imagesEl = document.getElementById('images');
+      const generateBtn = document.getElementById('generateBtn');
+      
+      if (!prompt) {
+        errorEl.textContent = 'Please enter a prompt';
+        errorEl.style.display = 'block';
+        return;
+      }
+      
+      errorEl.style.display = 'none';
+      loadingEl.style.display = 'block';
+      imagesEl.innerHTML = '';
+      generateBtn.disabled = true;
+      toggleDetailsBtn.style.display = 'none';
+      responseDetailsEl.style.display = 'none';
+      
+      try {
+        const startTime = Date.now();
+        
+        const response = await fetch('/.netlify/functions/ideogram-proxy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            prompt: prompt,
+            aspect_ratio: aspectRatio,
+            number_of_images: numImages
+          })
+        });
+        
+        const responseTime = ((Date.now() - startTime) / 1000).toFixed(2);
+        
+        // Prepare response details
+        const responseDetails = {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries([...response.headers.entries()]),
+          responseTime: `${responseTime} seconds`
+        };
+        
+        const data = await response.json();
+        responseDetails.data = data;
+        
+        // Display response details
+        responseDetailsEl.textContent = JSON.stringify(responseDetails, null, 2);
+        toggleDetailsBtn.style.display = 'block';
+        
+        if (!response.ok) {
+          throw new Error(data.error || data.message || `API error: ${response.status}`);
+        }
+        
+        if (data.images && data.images.length > 0) {
+          data.images.forEach(image => {
+            const container = document.createElement('div');
+            container.className = 'image-container';
+            
+            const img = document.createElement('img');
+            img.src = image.url;
+            img.alt = prompt;
+            img.loading = 'lazy';
+            
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'download-btn';
+            downloadBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
+            downloadBtn.title = 'Download image';
+            downloadBtn.addEventListener('click', async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              try {
+                const response = await fetch(image.url);
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ideogram-${Date.now()}.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              } catch (error) {
+                console.error('Download error:', error);
+                alert('Failed to download image');
+              }
+            });
+            
+            container.appendChild(img);
+            container.appendChild(downloadBtn);
+            imagesEl.appendChild(container);
+          });
+        } else {
+          errorEl.textContent = 'No images were generated';
+          errorEl.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Generation error:', error);
+        errorEl.textContent = error.message || 'An error occurred';
+        errorEl.style.display = 'block';
+      } finally {
+        loadingEl.style.display = 'none';
+        generateBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
