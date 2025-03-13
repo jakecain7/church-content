@@ -3,9 +3,20 @@ import { createClient, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
+// Initialize Supabase client with site URL configuration
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL || '',
-  import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+  import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      // Use window.location.origin to get the current site URL
+      site: window.location.origin
+    }
+  }
 );
 
 interface AuthContextType {
@@ -32,13 +43,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Listen for changes on auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // Handle password recovery event
+      if (event === 'PASSWORD_RECOVERY') {
+        navigate('/reset-password');
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
@@ -50,14 +66,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             first_name: firstName,
             last_name: lastName,
             full_name: `${firstName} ${lastName}`
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
 
       if (error) throw error;
 
       if (data.user) {
-        toast.success('Account created successfully!');
+        toast.success('Account created successfully! Please check your email to verify your account.');
         navigate('/dashboard');
       }
     } catch (error) {
@@ -101,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}/reset-password`
       });
 
       if (error) throw error;

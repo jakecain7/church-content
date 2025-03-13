@@ -4,9 +4,19 @@ import { createClient } from '@supabase/supabase-js';
 import { Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+// Initialize Supabase client with site URL configuration
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL || '',
-  import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+  import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      site: window.location.origin
+    }
+  }
 );
 
 export default function ResetPasswordPage() {
@@ -17,13 +27,24 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if we have a session when the component mounts
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
+    const handlePasswordReset = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
         toast.error('Invalid or expired reset link');
         navigate('/login');
+        return;
       }
-    });
+
+      // Check if we're in a password reset flow
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      if (hashParams.get('type') === 'recovery') {
+        // Clear the hash to avoid issues with future navigation
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+
+    handlePasswordReset();
   }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
