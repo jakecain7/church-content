@@ -8,12 +8,24 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // Proxy requests to Netlify Functions during development
       '/.netlify/functions': {
         target: 'http://localhost:8888',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path
+      }
+    }
+  },
+  build: {
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name.endsWith('.jpg')) {
+            return 'images/[name][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        }
       }
     }
   }

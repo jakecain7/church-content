@@ -1,7 +1,8 @@
 import OpenAI from 'openai';
 
+// Initialize OpenAI with error handling
 const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY || '',
   dangerouslyAllowBrowser: true,
 });
 
@@ -40,7 +41,7 @@ export async function generateBibleStudy(
   format: 'discussion' | 'teacher' = 'teacher'
 ): Promise<BibleStudy> {
   if (!import.meta.env.VITE_OPENAI_API_KEY) {
-    throw new Error('OpenAI API key is not configured');
+    throw new Error('OpenAI API key is not configured. Please check your environment variables.');
   }
 
   try {

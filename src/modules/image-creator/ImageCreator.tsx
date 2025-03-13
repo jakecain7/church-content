@@ -47,27 +47,27 @@ export function ImageCreator({ initialData, onSave }: ImageCreatorProps) {
   const exampleImages: ExampleImage[] = [
     {
       prompt: "Design a youth group event flyer with a fun, energetic vibe, featuring neon colors and bold text saying 'Join Us for Youth Night!'",
-      imageUrl: "/images/youth-night.jpg"
+      imageUrl: "https://christianeditinganddesign.com/wp-content/uploads/2025/03/design-a-youth-group-event-flyer-with-a-_60Ve2WzMRTehJtwoxyh66Q_TkmHMTW8SB6lG2LhtMfRFQ-7247879.jpeg"
     },
     {
-      prompt: "Coloring book, bold line art. White and black minimalistic easy draw coloring page for small kids featuring Noah's Ark with cute animals.",
-      imageUrl: "/images/noahs-ark-coloring.jpg"
+      prompt: "Create a black and white coloring page of Noah's Ark, with animals boarding the ark in pairs and a rainbow outline in the background.",
+      imageUrl: "https://christianeditinganddesign.com/wp-content/uploads/2025/03/coloring-book-bold-line-art-white-and-bl_n2wZVc22SDe9VBlQoNXu_w_a9GCIHp_T_OOonLlwSqbpg-3931444.jpeg"
     },
     {
       prompt: "Generate a minimalist sermon title slide for 'Overcoming Fear with Faith' using soft blues and a calm, hopeful aesthetic.",
-      imageUrl: "/images/overcoming-fear.jpg"
+      imageUrl: "https://christianeditinganddesign.com/wp-content/uploads/2025/03/generate-a-minimalist-sermon-title-slide_fwINlP4gQkyo2My-CLZk2g_O9SguenBT8eqKYlYhe3Zmw-6470836.jpeg"
     },
     {
       prompt: "Create an Instagram post for our Easter service featuring a glowing cross at sunrise with the text 'He is Risen!'",
-      imageUrl: "/images/he-is-risen.jpg"
+      imageUrl: "https://christianeditinganddesign.com/wp-content/uploads/2025/03/create-an-instagram-post-for-our-easter-_-l9ADMG6SJGJDDmbLAHbMg_6hNIV29YSIagNFyJO4c_8A-7194729.jpeg"
     },
     {
       prompt: "iPhone style photograph of an open Bible with soft, natural lighting, accompanied by a warm cup of coffee or tea.",
-      imageUrl: "/images/bible-coffee.jpg"
+      imageUrl: "https://christianeditinganddesign.com/wp-content/uploads/2025/03/iphone-style-photograph-of-an-open-bible_7eTFftV4TLKEQKbqWCKNJg_G6se_YXuQayxW7MSaXtR1w-4984059.png"
     },
     {
       prompt: "Create a Thanksgiving gratitude-themed image with autumn leaves, a harvest table, and the verse 'Give thanks to the Lord' (Psalm 107:1).",
-      imageUrl: "/images/give-thanks.jpg"
+      imageUrl: "https://christianeditinganddesign.com/wp-content/uploads/2025/03/create-a-thanksgiving-gratitude-themed-i_qK4bafDwQRSbbHra2MAr5A_k3Mhzo8dSuiC3uVP7_CA-g-5416459.jpeg"
     }
   ];
 
