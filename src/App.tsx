@@ -28,13 +28,18 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route 
-            path="/dashboard" 
+            path="/dashboard/*" 
             element={
               <PrivateRoute>
                 <Dashboard />
               </PrivateRoute>
-            } 
-          />
+            }
+          >
+            <Route index element={<Navigate to="bible-study" replace />} />
+            <Route path="bible-study" element={<Navigate to="." replace />} />
+            <Route path="images" element={<Navigate to="." replace />} />
+            <Route path="writing" element={<Navigate to="." replace />} />
+          </Route>
         </Routes>
         <Toaster position="top-right" />
       </AuthProvider>
